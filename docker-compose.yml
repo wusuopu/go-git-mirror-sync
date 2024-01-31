@@ -1,0 +1,17 @@
+version: '2.4'
+
+services:
+  app:
+    # jupyter notebook password
+    image: wusuopu/gophernotes:0.7.5
+    expose:
+      - 8888
+      - 80
+    environment:
+      - GOPROXY=https://goproxy.cn,direct
+      - GO111MODULE=auto
+    volumes:
+      - ./src:/app
+    working_dir: /app
+    tty: true
+    stdin_open: true
