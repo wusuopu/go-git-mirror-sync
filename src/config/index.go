@@ -12,6 +12,7 @@ func Load() IConfig {
 	if Config == nil {
 		PORT := os.Getenv("PORT")
 		if PORT == "" { PORT = "80" }
+
 		Config = IConfig{
 			"PORT": PORT,
 		}

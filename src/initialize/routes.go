@@ -8,5 +8,5 @@ import (
 
 func InitRoutes(e *gin.Engine) {
 	v1 := e.Group("/api/v1")
-	routes.Init((v1))
+	routes.Init(v1, e)
 }
