@@ -1,4 +1,4 @@
-package repository
+package routes
 
 import (
 	"app/controllers/repository"
@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Init(r *gin.RouterGroup) {
+func InitRepository(r *gin.RouterGroup) {
 	r.GET("/", repository.Index)
 	r.POST("/", repository.Create)
 }
