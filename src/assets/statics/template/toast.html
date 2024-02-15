@@ -1,0 +1,5 @@
+<div class="toast toast-top toast-center">
+  <div v-for="toast in $store.state.toasts" :key="toast.id" class="alert" :class="`alert-${toast.type}`">
+    <span>{{toast.message}}</span>
+  </div>
+</div>

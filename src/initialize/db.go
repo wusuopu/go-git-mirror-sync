@@ -1,6 +1,7 @@
 package initialize
 
 import (
+	"app/config"
 	"app/di"
 	"database/sql"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"github.com/glebarez/sqlite"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 func InitDB() {
@@ -24,8 +26,13 @@ func InitDB() {
 		// https://gorm.io/docs/connecting_to_the_database.html#SQLite
 		dialector = sqlite.Open(os.Getenv("DATABASE_DSN"))
 	}
+	lvl := logger.Error
+	if config.Config["GO_ENV"] != "production" {
+		lvl = logger.Info
+	}
 	db, err := gorm.Open(dialector, &gorm.Config{
 		DisableForeignKeyConstraintWhenMigrating: true,
+		Logger: logger.Default.LogMode(lvl),
 	})
 	if err != nil {
 		panic(fmt.Sprintf("connect DB error: %s", err.Error()))
@@ -50,6 +57,7 @@ func DBFromConn(conn *sql.DB, driver string) (*gorm.DB, error) {
 	return gorm.Open(&dia, &gorm.Config{})
 }
 
+// 连接 Mysql 而不选择数据库
 func ConnectMySQLWithoutDB(dsn string) (*gorm.DB, string, error) {
 	dialector := mysql.Open(dsn)
 	dbName := dialector.(*mysql.Dialector).DSNConfig.DBName

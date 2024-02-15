@@ -7,16 +7,16 @@ import (
 )
 
 func commonInit(e *gin.Engine) *gin.Engine {
-	config.Load()
 	InitServices()
 
 	var engine *gin.Engine
 	if e == nil {
-		engine = gin.Default()
+		engine = gin.New()
 	} else {
 		engine = e
 	}
 	InitDB()
+	InitLogger()
 	InitRoutes(engine)
 	return engine
 }
@@ -24,6 +24,7 @@ func commonInit(e *gin.Engine) *gin.Engine {
 func Init(e *gin.Engine) *gin.Engine {
 	// 先加载 .env 文件
 	InitEnv()
+	config.Load()
 
 	return commonInit(e)
 }
@@ -31,6 +32,7 @@ func Init(e *gin.Engine) *gin.Engine {
 func InitTest(e *gin.Engine) *gin.Engine {
 	// 先加载 .env.test 文件
 	InitEnv(".env.test")
+	config.Load()
 	config.Config["GO_ENV"] = "test"
 
 	gin.SetMode(gin.TestMode)

@@ -47,7 +47,8 @@ tags
 
 # End of https://www.toptal.com/developers/gitignore/api/go,vim
 
+src/.vscode
 src/.env
 src/tmp/
 src/notes/
-src/migrations/schema.sql
+src/app

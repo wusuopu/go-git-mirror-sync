@@ -5,9 +5,12 @@ go 1.21.6
 require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/glebarez/sqlite v1.10.0
+	github.com/itchyny/timefmt-go v0.1.5
 	github.com/joho/godotenv v1.5.1
 	github.com/pressly/goose/v3 v3.18.0
 	github.com/stretchr/testify v1.8.4
+	github.com/valyala/fastjson v1.6.4
+	go.uber.org/zap v1.26.0
 	gorm.io/driver/mysql v1.5.2
 	gorm.io/gorm v1.25.6
 )

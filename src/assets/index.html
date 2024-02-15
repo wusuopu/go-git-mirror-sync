@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Git自动多仓库同步</title>
+  <script src="https://unpkg.com/jquery@3.7.1/dist/jquery.js"></script>
+  {{if eq .debug true}}
+    <script src="https://unpkg.com/vue@3.4.19/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/vuex@4.1.0/dist/vuex.global.js"></script>
+    <script src="https://unpkg.com/vue-router@4.2.5/dist/vue-router.global.js"></script>
+  {{else}}
+    <script src="https://unpkg.com/vue@3.4.19/dist/vue.global.prod.js"></script>
+    <script src="https://unpkg.com/vuex@4.1.0/dist/vuex.global.prod.js"></script>
+    <script src="https://unpkg.com/vue-router@4.2.5/dist/vue-router.global.prod.js"></script>
+  {{end}}
+  <script src="https://unpkg.com/axios@1.6.7/dist/axios.min.js"></script>
+  <script src="https://unpkg.com/lodash@4.17.21/lodash.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.6.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/statics/js/main.js?t={{.version}}"></script>
+</head>
+<body>
+  <div id="app" class="mx-[auto] max-w-[960px]">
+    <router-view />
+  </div>
+</body>
+</html>

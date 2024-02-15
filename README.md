@@ -7,7 +7,10 @@
   * Web 框架： github.com/gin-gonic/gin v1.9.1
   * ORM： gorm.io/gorm v1.25.6
   * Migrate: https://github.com/pressly/goose
+  * Logger: go.uber.org/zap v1.26.0
   * 单元测试： github.com/stretchr/testify v1.8.4
+  * 前端框架： VUE
+  * UI库： https://daisyui.com/
 
 安装 air: `go install github.com/cosmtrek/air@latest`  
 安装 goose: `go install github.com/pressly/goose/v3/cmd/goose@v3.18.0`  
