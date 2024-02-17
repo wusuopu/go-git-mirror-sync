@@ -6,6 +6,7 @@ import (
 	"app/utils"
 	"fmt"
 	"path"
+	"time"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -19,11 +20,9 @@ func InitLogger(){
 		Encoding: "json",
 		OutputPaths: []string{"stdout", path.Join("tmp", fmt.Sprintf("%s.log", config.Config["GO_ENV"]))},
 		ErrorOutputPaths: []string{"stderr", path.Join("tmp", fmt.Sprintf("error-%s.log", config.Config["GO_ENV"]))},
-		EncoderConfig: zapcore.EncoderConfig{
-			MessageKey: "message",
-			LevelKey: "level",
-		},
+		EncoderConfig: zap.NewProductionEncoderConfig(),
 	}
+	cfg.EncoderConfig.EncodeTime = zapcore.TimeEncoderOfLayout(time.RFC3339)
 
 	switch config.Config["GO_ENV"] {
 	case "development","test":

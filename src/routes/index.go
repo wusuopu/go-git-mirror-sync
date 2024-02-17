@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"app/middlewares"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -12,7 +13,7 @@ func Init(router *gin.RouterGroup, engine *gin.Engine) {
 	engine.LoadHTMLFiles("./assets/index.html")
 
 	// engine.StaticFile("/", "./assets/index.html")
-	engine.GET("/", func(ctx *gin.Context) {
+	engine.GET("/", middlewares.BasicAuthMiddleware, func(ctx *gin.Context) {
 		ctx.HTML(200, "index.html", gin.H{
 			"debug": gin.Mode() != gin.ReleaseMode,
 			"version": time.Now().Unix(),

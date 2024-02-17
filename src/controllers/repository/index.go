@@ -8,6 +8,7 @@ import (
 	"app/utils/helper"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -46,7 +47,16 @@ func Create(ctx *gin.Context) {
 
 	schemas.MakeResponse(ctx, obj, nil)
 }
+func Show(ctx *gin.Context) {
+	entity := models.Repository{}
+	di.Container.DB.Find(&entity, ctx.Param("id"))
+	if errors.Is(di.Container.DB.Error, gorm.ErrRecordNotFound) {
+		schemas.MakeErrorResponse(ctx, "", 404)
+		return
+	}
 
+	schemas.MakeResponse(ctx, entity, nil)
+}
 
 func Delete(ctx *gin.Context) {
 	// 使用 Unscoped 彻底删除
@@ -101,4 +111,44 @@ func Update(ctx *gin.Context) {
 	}
 
 	schemas.MakeResponse(ctx, obj, nil)
+}
+
+func Pull(ctx *gin.Context) {
+	entity := models.Repository{}
+	di.Container.DB.Find(&entity, ctx.Param("id"))
+	if errors.Is(di.Container.DB.Error, gorm.ErrRecordNotFound) {
+		schemas.MakeErrorResponse(ctx, "", 404)
+		return
+	}
+
+	go func ()  {
+		if !utils.FsIsExist(di.Container.RepositoryService.GetCoreStorePath(entity)) {
+			err := di.Container.RepositoryService.Clone(entity)
+			var data = make(map[string]interface{})
+			if err != nil {
+				data["LastError"] = err.Error()
+			} else {
+				data["InitedAt"] = time.Now()
+				data["LastError"] = nil
+			}
+			di.Container.DB.Model(&entity).Updates(data)
+		}
+		if !utils.FsIsExist(di.Container.RepositoryService.GetCoreStorePath(entity)) {
+			// 仓库未初始化
+			return
+		}
+		err := di.Container.RepositoryService.SyncOrigin(entity)
+		var data = make(map[string]interface{})
+		if err != nil {
+			data["LastError"] = err.Error()
+		} else {
+			data["PulledAt"] = time.Now()
+			data["LastError"] = nil
+		}
+		di.Container.DB.Model(&entity).Updates(data)
+
+		di.Container.RepositoryService.BuildBranchInfo(entity)
+	}()
+
+	schemas.MakeResponse(ctx, entity, nil)
 }

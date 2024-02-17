@@ -1,3 +1,102 @@
 <div>
-  Repository Show
+  <h2>Repository Show</h2>
+  <div class="flex justify-end gap-1">
+    <button class="btn btn-info btn-sm" @click="handlePull">Pull</button>
+    <button class="btn btn-success btn-sm" @click="showCreateModal">添加镜像</button>
+  </div>
+  <div class="card w-full">
+    <div class="card-body">
+      <h2 class="card-title">基本信息</h2>
+      <div class="flex flex-col gap-1">
+        <div class="flex">
+          <span class="min-w-[150px]">Name:</span>
+          <span>{{data.Name}}</span>
+        </div>
+        <div class="flex">
+          <span class="min-w-[150px]">Alias:</span>
+          <span>{{data.Alias}}</span>
+        </div>
+        <div class="flex">
+          <span class="min-w-[150px]">Url:</span>
+          <span>{{data.Url}}</span>
+        </div>
+        <div class="flex">
+          <span class="min-w-[150px]">AuthType:</span>
+          <span>{{data.AuthType}}</span>
+        </div>
+        <div class="flex">
+          <span class="min-w-[150px]">InitedAt:</span>
+          <span>{{data.InitedAt}}</span>
+        </div>
+        <div class="flex">
+          <span class="min-w-[150px]">PulledAt:</span>
+          <span>{{data.PulledAt}}</span>
+        </div>
+        <div class="flex">
+          <span class="min-w-[150px]">LastError:</span>
+          <span>{{data.LastError}}</span>
+        </div>
+        <div class="flex">
+          <span class="min-w-[150px]">CreatedAt:</span>
+          <span>{{data.CreatedAt}}</span>
+        </div>
+        <div class="flex">
+          <span class="min-w-[150px]">UpdatedAt:</span>
+          <span>{{data.UpdatedAt}}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card w-full">
+    <div class="card-body">
+      <h2 class="card-title">分支信息</h2>
+
+      <div class="overflow-x-auto">
+        <table class="table">
+          <!-- head -->
+          <thead>
+            <tr>
+              <th>Index</th>
+              <th>Name</th>
+              <th>Commit Date</th>
+              <th>Commit Message</th>
+              <th>Is Tag</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in branchList">
+              <th>{{item.ID}}</th>
+              <td>{{item.Name}}</td>
+              <td>{{item.CommittedAt}}</td>
+              <td>{{item.CommitMsg}}</td>
+              <td>{{item.IsTag}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card w-full">
+    <div class="card-body">
+      <h2 class="card-title">镜像信息</h2>
+    </div>
+  </div>
 </div>
+
+<dialog id="create_modal" class="modal">
+  <div class="modal-box">
+    <h3 v-if="formMode === 'update'" class="font-bold text-lg">编辑 Mirror {{selectedId}}</h3>
+    <h3 v-else class="font-bold text-lg">新建 Mirror</h3>
+
+    <div class="max-h-80 overflow-y-auto">
+
+    </div>
+
+    <div class="modal-action">
+      <button class="btn btn-info btn-sm" @click="closeCreateModal">取消</button>
+      <button class="btn btn-error btn-sm" @click="handleSubmitForm">确定</button>
+    </div>
+  </div>
+</dialog>

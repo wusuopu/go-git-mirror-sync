@@ -6,7 +6,8 @@ import (
 	"gorm.io/gorm"
 )
 
-type Repository struct {
+
+type Mirror struct {
 	gorm.Model
 	Name        string      `gorm:"type:varchar(80);"`
 	Alias       string      `gorm:"type:varchar(80);"`
@@ -15,9 +16,8 @@ type Repository struct {
 	Username    *string     `gorm:"type:varchar(80);"`
 	Password    *string     `gorm:"type:varchar(80);"`
 	SSHKey      *string     `gorm:"type:varchar(80);"`
-	PulledAt    *time.Time
-	InitedAt    *time.Time
+	PushedAt    *time.Time
 	LastError   *string     `gorm:"type:text;"`
-	Mirrors     []Mirror
-	Branches    []Branch
+	RepositoryId	uint
+	Repository	Repository
 }

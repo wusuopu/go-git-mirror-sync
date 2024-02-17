@@ -14,8 +14,15 @@ FROM alpine:3.19
 COPY --from=builder /app/ /app
 WORKDIR /app/
 
+VOLUME ["/app/tmp", "/app/data"]
+
 ENV GO_ENV=production \
-    GIN_MODE=release
+    GIN_MODE=release \
+    BASIC_AUTH_USER= \
+    BASIC_AUTH_PASSWORD= \
+    DATABASE_TYPE=sqlite \
+    DATABASE_DSN=/app/data/production.db \
+    GIT_INSECURE_SKIP_TLS=false
 
 ENTRYPOINT ["/app/run.sh"]
 

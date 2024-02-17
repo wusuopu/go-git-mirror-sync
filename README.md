@@ -1,4 +1,6 @@
 # 多个 git 仓库自动同步
+## 使用说明
+
 
 ## 开发环境搭建
   * golang 1.21.6
@@ -11,6 +13,7 @@
   * 单元测试： github.com/stretchr/testify v1.8.4
   * 前端框架： VUE
   * UI库： https://daisyui.com/
+  * Jupyter： https://github.com/janpfeifer/gonb
 
 安装 air: `go install github.com/cosmtrek/air@latest`  
 安装 goose: `go install github.com/pressly/goose/v3/cmd/goose@v3.18.0`  

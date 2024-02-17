@@ -3,6 +3,7 @@ package notes
 import (
 	"app/config"
 	"app/di"
+	"app/initialize"
 	"app/utils"
 	"fmt"
 	"os"
@@ -59,9 +60,13 @@ func InitLogger(){
 	logger := zap.Must(cfg.Build())
 	di.Container.Logger = logger
 }
+
+
+
 func Init(filename string) {
 	godotenv.Load(filename)
 	config.Load()
 	InitDB()
 	InitLogger()
+	initialize.InitServices()
 }

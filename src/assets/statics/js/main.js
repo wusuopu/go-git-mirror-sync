@@ -177,10 +177,79 @@ $(function() {
     };
     var ShowPage = {
       template: templates.show,
-      methods: {
+      data: () => {
+        return {
+          data: {},
+          selectedMirrorId: null,
+          formMode: 'create',
+          formData: {
+            Name: '',
+            Alias: '',
+            Url: '',
+            AuthType: '',
+            Username: '',
+            Password: '',
+            SSHKey: '',
+          },
+          formErrors: {
+            Name: '',
+            Alias: '',
+            Url: '',
+            AuthType: '',
+            Username: '',
+            Password: '',
+            SSHKey: '',
+          },
+          branchList: [],
+          tagList: [],
+        }
       },
-      components: {
-      }
+      methods: {
+        async fetchData() {
+          try {
+            const res = await axios.get(`${BASE_API}/repositories/${this.$route.params.id}`);
+            this.data = res.data.Data;
+          } catch (error) {
+            this.$store.dispatch('showToast', {type: 'error', message: error.message});
+          }
+        },
+        showDeleteModal(id) {
+          document.querySelector("#delete_confirm").showModal();
+          this.selectedMirrorId = id;
+        },
+        showEditModal(item) {
+          this.formMode = 'update';
+          this.selectedMirrorId = item.ID;
+          for (const key in this.formErrors) {
+            this.formErrors[key] = '';
+          }
+          document.querySelector("#create_modal").showModal();
+        },
+        showCreateModal() {
+          document.querySelector("#create_modal").showModal();
+        },
+        closeCreateModal() {
+          document.querySelector("#create_modal").close();
+        },
+        handleSubmitForm() {
+
+        },
+        async handleDelete() {
+          console.log('delete data', this.selectedMirrorId);
+        },
+        async handlePull() {
+          try {
+            const res = await axios.put(`${BASE_API}/repositories/${this.$route.params.id}/pull`);
+            this.$store.dispatch('showToast', {type: 'info', message: '正在拉取仓库数据'});
+          } catch (error) {
+            this.$store.dispatch('showToast', {type: 'error', message: error.message});
+          }
+        },
+      },
+      created: function() {
+        console.log("fetch data");
+        this.fetchData();
+      },
     };
 
     var router = new VueRouter.createRouter({

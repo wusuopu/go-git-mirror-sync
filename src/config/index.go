@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"strconv"
 )
 
 type IConfig map[string]interface{}
@@ -18,10 +19,12 @@ func Load() IConfig {
 		if GO_ENV == "" {
 			GO_ENV = "development"
 		}
+		GIT_INSECURE_SKIP_TLS, _ := strconv.ParseBool(os.Getenv("GIT_INSECURE_SKIP_TLS"))
 
 		Config = IConfig{
 			"PORT": PORT,
 			"GO_ENV": GO_ENV,
+			"GIT_INSECURE_SKIP_TLS": GIT_INSECURE_SKIP_TLS,
 		}
 	}
 	return Config

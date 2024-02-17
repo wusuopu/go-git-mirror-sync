@@ -52,3 +52,4 @@ src/.env
 src/tmp/
 src/notes/
 src/app
+src/data/
