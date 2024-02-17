@@ -6,12 +6,10 @@ import (
 	"app/schemas"
 	"app/utils"
 	"app/utils/helper"
-	"errors"
 	"fmt"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
 func Index(ctx *gin.Context) {
@@ -49,31 +47,22 @@ func Create(ctx *gin.Context) {
 }
 func Show(ctx *gin.Context) {
 	entity := models.Repository{}
-	di.Container.DB.Find(&entity, ctx.Param("id"))
-	if errors.Is(di.Container.DB.Error, gorm.ErrRecordNotFound) {
-		schemas.MakeErrorResponse(ctx, "", 404)
-		return
-	}
+	results := di.Container.DB.First(&entity, ctx.Param("repositoryId"))
+	utils.ThrowIfError(results.Error)
 
 	schemas.MakeResponse(ctx, entity, nil)
 }
 
 func Delete(ctx *gin.Context) {
 	// 使用 Unscoped 彻底删除
-	di.Container.DB.Unscoped().Delete(&models.Repository{}, ctx.Param("id"))
-	if di.Container.DB.Error != nil {
-		schemas.MakeErrorResponse(ctx, di.Container.DB.Error, 500)
-		return
-	}
+	results := di.Container.DB.Unscoped().Delete(&models.Repository{}, ctx.Param("repositoryId"))
+	utils.ThrowIfError(results.Error)
 	schemas.MakeResponse(ctx, "ok", nil)
 }
 func Update(ctx *gin.Context) {
 	entity := models.Repository{}
-	di.Container.DB.Find(&entity, ctx.Param("id"))
-	if errors.Is(di.Container.DB.Error, gorm.ErrRecordNotFound) {
-		schemas.MakeErrorResponse(ctx, "", 404)
-		return
-	}
+	results := di.Container.DB.First(&entity, ctx.Param("repositoryId"))
+	utils.ThrowIfError(results.Error)
 
 	body := helper.GetJSONBody(ctx)
 	Username := helper.GetJSONString(body, "Username")
@@ -115,11 +104,8 @@ func Update(ctx *gin.Context) {
 
 func Pull(ctx *gin.Context) {
 	entity := models.Repository{}
-	di.Container.DB.Find(&entity, ctx.Param("id"))
-	if errors.Is(di.Container.DB.Error, gorm.ErrRecordNotFound) {
-		schemas.MakeErrorResponse(ctx, "", 404)
-		return
-	}
+	results := di.Container.DB.First(&entity, ctx.Param("repositoryId"))
+	utils.ThrowIfError(results.Error)
 
 	go func ()  {
 		if !utils.FsIsExist(di.Container.RepositoryService.GetCoreStorePath(entity)) {

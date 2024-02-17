@@ -9,8 +9,8 @@ import (
 func InitRepository(r *gin.RouterGroup) {
 	r.GET("/", repository.Index)
 	r.POST("/", repository.Create)
-	r.GET("/:id", repository.Show)
-	r.PUT("/:id", repository.Update)
-	r.DELETE("/:id", repository.Delete)
-	r.PUT("/:id/pull", repository.Pull)
+	r.GET("/:repositoryId", repository.Show)
+	r.PUT("/:repositoryId", repository.Update)
+	r.DELETE("/:repositoryId", repository.Delete)
+	r.PUT("/:repositoryId/pull", repository.Pull)
 }

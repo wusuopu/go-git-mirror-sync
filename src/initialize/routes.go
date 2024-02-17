@@ -33,7 +33,7 @@ func InitRoutes(e *gin.Engine) {
 				param.ErrorMessage,
 		)
 	}))
-	e.Use(gin.Recovery())
+	e.Use(middlewares.ErrorHandleMiddlewareFactory())
 
 	v1 := e.Group("/api/v1", middlewares.BasicAuthMiddleware, middlewares.RawBodyMiddleware)
 	routes.Init(v1, e)

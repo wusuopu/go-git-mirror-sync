@@ -11,6 +11,10 @@ RUN go build -o goose cmd/goose.go && \
     go build -tags=jsoniter -ldflags "-linkmode external -extldflags=-static -s -w" -o app .
 
 FROM alpine:3.19
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories && \
+    apk update && \
+    apk add git
+
 COPY --from=builder /app/ /app
 WORKDIR /app/
 

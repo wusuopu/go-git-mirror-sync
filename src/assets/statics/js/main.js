@@ -207,8 +207,12 @@ $(function() {
       methods: {
         async fetchData() {
           try {
-            const res = await axios.get(`${BASE_API}/repositories/${this.$route.params.id}`);
+            let res = await axios.get(`${BASE_API}/repositories/${this.$route.params.id}`);
             this.data = res.data.Data;
+            res = await axios.get(`${BASE_API}/repositories/${this.$route.params.id}/branches`);
+            const refs = _.groupBy(res.data.Data, 'IsTag')
+            this.branchList = _.sortBy(refs[false], 'Name')
+            this.tagList = _.sortBy(refs[true], 'Name')
           } catch (error) {
             this.$store.dispatch('showToast', {type: 'error', message: error.message});
           }

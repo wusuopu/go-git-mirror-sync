@@ -50,40 +50,50 @@
 
   <div class="card w-full">
     <div class="card-body">
+      <h2 class="card-title">镜像信息</h2>
+    </div>
+  </div>
+</div>
+
+  <div class="card w-full">
+    <div class="card-body">
       <h2 class="card-title">分支信息</h2>
 
       <div class="overflow-x-auto">
-        <table class="table">
+        <table class="table table-xs table-pin-rows">
           <!-- head -->
           <thead>
             <tr>
               <th>Index</th>
               <th>Name</th>
+              <th>Is Tag</th>
+              <th>Hash</th>
               <th>Commit Date</th>
               <th>Commit Message</th>
-              <th>Is Tag</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in branchList">
-              <th>{{item.ID}}</th>
+            <tr v-for="(item, idx) in branchList" :key="item.ID">
+              <th>{{idx+1}}</th>
               <td>{{item.Name}}</td>
-              <td>{{item.CommittedAt}}</td>
-              <td>{{item.CommitMsg}}</td>
               <td>{{item.IsTag}}</td>
+              <td>{{item.Hash}}</td>
+              <td>{{item.CommittedAt}}</td>
+              <td><pre>{{item.CommitMsg}}</pre></td>
+            </tr>
+            <tr v-for="(item, idx) in tagList" :key="item.ID">
+              <th>{{idx+1}}</th>
+              <td>{{item.Name}}</td>
+              <td>{{item.IsTag}}</td>
+              <td>{{item.Hash}}</td>
+              <td>{{item.CommittedAt}}</td>
+              <td><pre>{{item.CommitMsg}}</pre></td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
   </div>
-
-  <div class="card w-full">
-    <div class="card-body">
-      <h2 class="card-title">镜像信息</h2>
-    </div>
-  </div>
-</div>
 
 <dialog id="create_modal" class="modal">
   <div class="modal-box">

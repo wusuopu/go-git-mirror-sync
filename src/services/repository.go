@@ -8,14 +8,18 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-git/go-git/v5"
 	gitconfig "github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
@@ -94,13 +98,51 @@ func (s *RepositoryService) Clone(r models.Repository) error {
 	})
 	if err != nil {
 		di.Container.Logger.Error(fmt.Sprintf("Clone Error %s %s", r.Url, err.Error()))
-	} else {
-		di.Container.Logger.Info(fmt.Sprintf("Finish Clone %s", r.Url))
+		return err
 	}
-	
-	return err
+
+	di.Container.Logger.Info(fmt.Sprintf("Finish Clone %s", r.Url))
+	// 仅保留 .git 目录，其他文件都删除，节约磁盘空间
+	files, err := os.ReadDir(target)
+	if err == nil {
+		for _, entry := range files {
+			if entry.Name() == ".git" {
+				continue
+			}
+			os.RemoveAll(path.Join(target, entry.Name()))
+		}
+	}
+	return nil
 }
 
+// 获取对应 hash 的 commit 信息
+func (s *RepositoryService) getCommintLogForHash(repo *git.Repository,target string, refName string, hash string) (*object.Commit, error) {
+	commit, err := repo.CommitObject(plumbing.NewHash(hash))
+	if err == nil {
+		return commit, nil
+	}
+
+	// 有时 tag 的 hash 指向的 commit 不正确
+	cmd := exec.Command("git", "log", "-n", "1", "--pretty=format:%H%n%ct%n%B", refName)
+	cmd.Dir = target
+	out, err := cmd.Output()
+	if err != nil {
+		return nil, err
+	}
+	data := strings.SplitN(string(out), "\n", 3)
+	hash = data[0]		// 正确的 hash 值
+	sec, _ := strconv.ParseInt(data[1], 10, 64)
+	date := time.Unix(sec, 0)
+	message := data[2]
+	commit = &object.Commit{
+		Hash: plumbing.NewHash(hash),
+		Message: message,
+		Author: object.Signature{
+			When: date,
+		},
+	}
+	return commit, nil
+}
 // 清除本地的所有分支
 func (s *RepositoryService) cleanAllLocalBranches(repo *git.Repository, target string) error {
 	cfg, err := repo.Config()
@@ -277,10 +319,11 @@ func (s *RepositoryService) BuildBranchInfo(r models.Repository) error {
 			IsTag: true,
 			RepositoryId: r.ID,
 		}
-		commit, err := repo.CommitObject(plumbing.NewHash(hash))
+		commit, err := s.getCommintLogForHash(repo, target, name, hash)
 		if err != nil {
 			di.Container.Logger.Error(fmt.Sprintf("%s get tag log for %s(%s) error %s", r.Name, name, hash, err.Error()))
 		} else {
+			obj.Hash = commit.Hash.String()
 			obj.CommittedAt = &commit.Author.When
 			obj.CommitMsg = &commit.Message
 		}
