@@ -22,7 +22,7 @@ func Init(router *gin.RouterGroup, engine *gin.Engine) {
 
 	InitRepository(router.Group("/repositories"))
 	InitBranch(router.Group("/repositories/:repositoryId/branches"))
-	InitBranch(router.Group("/repositories/:repositoryId/mirrors"))
+	InitMirror(router.Group("/repositories/:repositoryId/mirrors"))
 	engine.GET("_health", func(ctx *gin.Context) {
 		ctx.String(200, "ok")
 	})

@@ -22,6 +22,32 @@
 创建数据库表结构： `go run cmd/goose.go [--env development|production|test] up `  
 运行开发服务器： `air`  
 
+项目目录结构：
+```
+src
+├── assets/           静态文件
+├── cmd/              额外的命令程序
+├── config/           解析环境变量之后的配置
+├── controllers/      web程序的Controller
+├── data/             数据保存的目录
+├── di/               di容器
+├── initialize/       程序初始化
+├── interfaces/       仅定义一些接口，方便单元测试时进行Mock
+├── jobs/             定时任务
+├── middlewares/      web程序的Middleware
+├── migrations/       数据库的 migration
+├── models/           数据库的 Model
+├── notes/            jupyter notebook
+├── routes/           web程序的 Route
+├── schemas/          定义一些应用程序的 struct
+├── services/         定义一些应用程序的 Service，在执行测试时可以针对性的进行Mock
+├── tests/            测试用例
+├── tmp/              log保存目录
+└── utils/            一些常用功能
+```
+
 ## 运行测试
 执行命令： `go test -v app/tests/...`
+
+
 

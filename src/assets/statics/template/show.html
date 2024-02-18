@@ -51,6 +51,35 @@
   <div class="card w-full">
     <div class="card-body">
       <h2 class="card-title">镜像信息</h2>
+        <table class="table">
+          <!-- head -->
+          <thead>
+            <tr>
+              <th>Id</th>
+              <th>Name</th>
+              <th>Alias</th>
+              <th>Url</th>
+              <th>PushedAt</th>
+              <th>LastError</th>
+              <th class="w-[210px]">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in mirrorList" :key="item.ID">
+              <th>{{item.ID}}</th>
+              <td>{{item.Name}}</td>
+              <td>{{item.Alias}}</td>
+              <td>{{item.Url}}</td>
+              <td>{{item.PushedAt}}</td>
+              <td>{{item.LastError}}</td>
+              <td>
+                <button class="btn btn-info btn-sm" @click="handlePush(item)">Push</button>
+                <button class="btn btn-info btn-sm" @click="showEditModal(item)">编辑</button>
+                <button class="btn btn-error btn-sm" @click="showDeleteModal(item.ID)">删除</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
     </div>
   </div>
 </div>
@@ -95,14 +124,83 @@
     </div>
   </div>
 
+<dialog id="delete_confirm" class="modal">
+  <div class="modal-box">
+    <h3 class="font-bold text-lg">请确认</h3>
+    <p class="py-4">是否要删除？</p>
+    <div class="modal-action">
+      <form method="dialog">
+        <button class="btn btn-info btn-sm">取消</button>
+        <button class="btn btn-error btn-sm" @click="handleDelete()">确定</button>
+      </form>
+    </div>
+  </div>
+</dialog>
+
 <dialog id="create_modal" class="modal">
   <div class="modal-box">
     <h3 v-if="formMode === 'update'" class="font-bold text-lg">编辑 Mirror {{selectedId}}</h3>
     <h3 v-else class="font-bold text-lg">新建 Mirror</h3>
 
-    <div class="max-h-80 overflow-y-auto">
+      <div class="max-h-80 overflow-y-auto">
+        <label class="form-control w-full">
+          <div class="label">
+            <span class="label-text">Name:</span>
+          </div>
+          <input v-model="formData.Name" :disabled="formMode === 'update'" type="text" placeholder="git remote 的名称，对于该仓库是唯一的" class="input input-bordered input-sm w-full" :class="{'input-error': formErrors.Name}" />
+          <div class="label">
+            <span class="label-text text-red">{{formErrors.Name}}</span>
+          </div>
+        </label>
 
-    </div>
+        <label class="form-control w-full">
+          <div class="label">
+            <span class="label-text">Alias:</span>
+          </div>
+          <input v-model="formData.Alias" type="text" placeholder="别名" class="input input-bordered input-sm w-full" :class="{'input-error': formErrors.Alias}" />
+        </label>
+
+        <label class="form-control w-full">
+          <div class="label">
+            <span class="label-text">Url:</span>
+          </div>
+          <input v-model="formData.Url" type="text" placeholder="仓库Url" class="input input-bordered input-sm w-full" :class="{'input-error': formErrors.Url}" />
+        </label>
+
+        <label class="form-control w-full">
+          <div class="label">
+            <span class="label-text">AuthType:</span>
+          </div>
+          <div class="flex">
+            <label class="cursor-pointer label">
+              <span class="label-text">用户名</span> 
+              <input v-model="formData.AuthType" type="checkbox" class="toggle toggle-primary" />
+              <span class="label-text">SSHKey</span> 
+            </label>
+          </div>
+        </label>
+
+        <label class="form-control w-full">
+          <div class="label">
+            <span class="label-text">Username:</span>
+          </div>
+          <input v-model="formData.Username" type="text" placeholder="" class="input input-bordered input-sm w-full" :class="{'input-error': formErrors.Username}" />
+        </label>
+
+        <label class="form-control w-full">
+          <div class="label">
+            <span class="label-text">Password:</span>
+          </div>
+          <input v-model="formData.Password" type="text" placeholder="" class="input input-bordered input-sm w-full" :class="{'input-error': formErrors.Password}" />
+        </label>
+
+        <label class="form-control w-full">
+          <div class="label">
+            <span class="label-text">SSHKey:</span>
+          </div>
+          <textarea v-model="formData.SSHKey" type="text" placeholder="" class="textarea textarea-bordered textarea-sm w-full" :class="{'textarea-error': formErrors.SSHKey}" />
+        </label>
+      </div>
 
     <div class="modal-action">
       <button class="btn btn-info btn-sm" @click="closeCreateModal">取消</button>

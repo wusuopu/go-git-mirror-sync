@@ -14,7 +14,7 @@ type Repository struct {
 	AuthType    string      `gorm:"type:varchar(15);"`      // password | sshkey
 	Username    *string     `gorm:"type:varchar(80);"`
 	Password    *string     `gorm:"type:varchar(80);"`
-	SSHKey      *string     `gorm:"type:varchar(80);"`
+	SSHKey      *string     `gorm:"type:text;"`
 	PulledAt    *time.Time
 	InitedAt    *time.Time
 	LastError   *string     `gorm:"type:text;"`

@@ -20,7 +20,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="item in list">
+        <tr v-for="item in list" :key="item.ID">
           <th>{{item.ID}}</th>
           <td>{{item.Name}}</td>
           <td>{{item.Alias}}</td>

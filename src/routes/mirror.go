@@ -9,7 +9,7 @@ import (
 func InitMirror(r *gin.RouterGroup) {
 	r.GET("/", mirror.Index)
 	r.POST("/", mirror.Create)
-	r.PUT("/:branchId", mirror.Update)
-	r.DELETE("/:branchId", mirror.Delete)
-	r.PUT("/:branchId/push", mirror.Push)
+	r.PUT("/:mirrorId", mirror.Update)
+	r.DELETE("/:mirrorId", mirror.Delete)
+	r.PUT("/:mirrorId/push", mirror.Push)
 }

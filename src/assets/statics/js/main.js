@@ -48,6 +48,10 @@ $(function() {
     });
     return store;
   }
+  function errorToast(store, error, defaultMessage) {
+    let msg = _.get(error, 'response.data.Error') || _.get(error, 'message') || defaultMessage
+    store.dispatch('showToast', {type: 'error', message: msg});
+  }
   LoadTemplate().then((templates) => {
     var Toast = {
       template: templates.toast,
@@ -166,7 +170,7 @@ $(function() {
             this.closeCreateModal();
             this.fetchData(1);
           } catch (error) {
-            this.$store.dispatch('showToast', {type: 'error', message: error.message});
+            errorToast(this.$store, error)
           }
         },
       },
@@ -202,6 +206,7 @@ $(function() {
           },
           branchList: [],
           tagList: [],
+          mirrorList: [],
         }
       },
       methods: {
@@ -209,12 +214,21 @@ $(function() {
           try {
             let res = await axios.get(`${BASE_API}/repositories/${this.$route.params.id}`);
             this.data = res.data.Data;
-            res = await axios.get(`${BASE_API}/repositories/${this.$route.params.id}/branches`);
+            res = await axios.get(`${BASE_API}/repositories/${this.$route.params.id}/branches/`);
             const refs = _.groupBy(res.data.Data, 'IsTag')
             this.branchList = _.sortBy(refs[false], 'Name')
             this.tagList = _.sortBy(refs[true], 'Name')
+            this.fetchMirrors()
           } catch (error) {
-            this.$store.dispatch('showToast', {type: 'error', message: error.message});
+            errorToast(this.$store, error)
+          }
+        },
+        async fetchMirrors() {
+          try {
+            const res = await axios.get(`${BASE_API}/repositories/${this.$route.params.id}/mirrors/`);
+            this.mirrorList = res.data.Data;
+          } catch (error) {
+            errorToast(this.$store, error)
           }
         },
         showDeleteModal(id) {
@@ -224,29 +238,85 @@ $(function() {
         showEditModal(item) {
           this.formMode = 'update';
           this.selectedMirrorId = item.ID;
+          this.formData.Name = item.Name;
+          this.formData.Alias = item.Alias;
+          this.formData.Url = item.Url;
+          this.formData.AuthType = item.AuthType === 'sshkey';
+          this.formData.Username = item.Username;
+          this.formData.Password = item.Password;
+          this.formData.SSHKey = item.SSHKey;
+          for (const key in this.formErrors) {
+            this.formErrors[key] = '';
+          }
+          document.querySelector("#create_modal").showModal();
+
+          this.selectedMirrorId = item.ID;
           for (const key in this.formErrors) {
             this.formErrors[key] = '';
           }
           document.querySelector("#create_modal").showModal();
         },
         showCreateModal() {
+          for (const key in this.formData) {
+            this.formData[key] = '';
+          }
+          this.formData.AuthType = false;
+          for (const key in this.formErrors) {
+            this.formErrors[key] = '';
+          }
+          this.formMode = 'create';
           document.querySelector("#create_modal").showModal();
         },
         closeCreateModal() {
           document.querySelector("#create_modal").close();
         },
-        handleSubmitForm() {
+        async handleSubmitForm() {
+          let payload = _.assign({}, this.formData);
+          payload.Name = payload.Name.trim();
+          if (payload.Name === 'origin') {
+            this.formErrors.Name = "不能使用 origin";
+            return;
+          }
+          this.formErrors.Name = '';
 
+          payload.AuthType = this.formData.AuthType ? 'sshkey' : 'password';
+          try {
+            if (this.formMode === 'update' && this.selectedMirrorId) {
+              await axios.put(`${BASE_API}/repositories/${this.$route.params.id}/mirrors/${this.selectedMirrorId}`, payload);
+              this.$store.dispatch('showToast', {type: 'success', message: '更新成功'});
+            } else {
+              await axios.post(`${BASE_API}/repositories/${this.$route.params.id}/mirrors/`, payload);
+              this.$store.dispatch('showToast', {type: 'success', message: '创建成功'});
+            }
+            this.closeCreateModal();
+            this.fetchMirrors();
+          } catch (error) {
+            errorToast(this.$store, error)
+          }
         },
         async handleDelete() {
-          console.log('delete data', this.selectedMirrorId);
+          try {
+            await axios.delete(`${BASE_API}/repositories/${this.$route.params.id}/mirrors/${this.selectedMirrorId}`);
+            this.fetchMirrors();
+            this.$store.dispatch('showToast', {type: 'success', message: '删除成功'});
+          } catch (error) {
+            errorToast(this.$store, error, '删除失败')
+          }
         },
         async handlePull() {
           try {
             const res = await axios.put(`${BASE_API}/repositories/${this.$route.params.id}/pull`);
             this.$store.dispatch('showToast', {type: 'info', message: '正在拉取仓库数据'});
           } catch (error) {
-            this.$store.dispatch('showToast', {type: 'error', message: error.message});
+            errorToast(this.$store, error)
+          }
+        },
+        async handlePush(item) {
+          try {
+            const res = await axios.put(`${BASE_API}/repositories/${this.$route.params.id}/mirrors/${item.ID}/push`);
+            this.$store.dispatch('showToast', {type: 'info', message: '正在推送仓库数据'});
+          } catch (error) {
+            errorToast(this.$store, error)
           }
         },
       },

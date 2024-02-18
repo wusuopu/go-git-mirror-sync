@@ -26,7 +26,7 @@ func createModel20240216122225 () interface{} {
 		AuthType    string      `gorm:"type:varchar(15);"`      // password | sshkey
 		Username    *string     `gorm:"type:varchar(80);"`
 		Password    *string     `gorm:"type:varchar(80);"`
-		SSHKey      *string     `gorm:"type:varchar(80);"`
+		SSHKey      *string     `gorm:"type:text;"`
 		PushedAt    *time.Time
 		LastError   *string     `gorm:"type:text;"`
 		RepositoryId uint

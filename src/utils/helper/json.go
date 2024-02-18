@@ -166,10 +166,9 @@ func GetJSONString(val *fastjson.Value, keys string) string {
 	}
 
 	ret := v.String()
-	if len(ret) < 2 { return ret }
-	if ret[0] == '"' && ret[len(ret)-1] == '"' {
-			// 去掉前后的双引号
-			return ret[1:len(ret)-1]
+	ret, err := strconv.Unquote(ret)
+	if err != nil {
+		return ""
 	}
 	return ret
 }

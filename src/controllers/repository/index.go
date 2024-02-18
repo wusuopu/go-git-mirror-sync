@@ -28,8 +28,13 @@ func Create(ctx *gin.Context) {
 	SSHKey := helper.GetJSONString(body, "SSHKey")
 
 	fmt.Println("create with", helper.GetJSONString(body, "Name"))
+	Name := helper.GetJSONString(body, "Name")
+	if di.Container.DB.Where("name = ?", Name).First(&models.Repository{}).RowsAffected > 0 {
+		schemas.MakeErrorResponse(ctx, "Name重复", 400)
+		return
+	}
 	obj := models.Repository{
-		Name: helper.GetJSONString(body, "Name"),
+		Name: Name,
 		Alias: helper.GetJSONString(body, "Alias"),
 		Url: helper.GetJSONString(body, "Url"),
 		AuthType: helper.GetJSONString(body, "AuthType"),

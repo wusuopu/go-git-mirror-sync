@@ -17,7 +17,7 @@ func ErrorHandleMiddlewareFactory() gin.HandlerFunc {
 			return
 		}
 
-		schemas.MakeErrorResponse(c, "", 500)
+		schemas.MakeErrorResponse(c, err.(error).Error(), 500)
 		c.Abort()
 	})
 }

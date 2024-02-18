@@ -6,7 +6,7 @@ import (
 	"app/schemas"
 	"app/utils"
 	"app/utils/helper"
-	"fmt"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -24,12 +24,18 @@ func Create(ctx *gin.Context) {
 	utils.ThrowIfError(results.Error)
 
 	body := helper.GetJSONBody(ctx)
+	Name := helper.GetJSONString(body, "Name")
+	if di.Container.DB.Where("name = ?", Name).First(&models.Mirror{}).RowsAffected > 0 {
+		schemas.MakeErrorResponse(ctx, "Name重复", 400)
+		return
+	}
+
 	Username := helper.GetJSONString(body, "Username")
 	Password := helper.GetJSONString(body, "Password")
 	SSHKey := helper.GetJSONString(body, "SSHKey")
 
 	obj := models.Mirror{
-		Name: helper.GetJSONString(body, "Name"),
+		Name: Name,
 		Alias: helper.GetJSONString(body, "Alias"),
 		Url: helper.GetJSONString(body, "Url"),
 		AuthType: helper.GetJSONString(body, "AuthType"),
@@ -43,12 +49,17 @@ func Create(ctx *gin.Context) {
 	utils.ThrowIfError(results.Error)
 
 	// 在仓库创建 remote
+	di.Container.RepositoryService.CreateRemote(entity, obj)
 
 	schemas.MakeResponse(ctx, obj, nil)
 }
 func Update(ctx *gin.Context) {
-	entity := models.Mirror{}
-	results := di.Container.DB.First(&entity, ctx.Param("mirrorId"))
+	entity := models.Repository{}
+	results := di.Container.DB.First(&entity, ctx.Param("repositoryId"))
+	utils.ThrowIfError(results.Error)
+
+	oldObj := models.Mirror{}
+	results = di.Container.DB.First(&oldObj, ctx.Param("mirrorId"))
 	utils.ThrowIfError(results.Error)
 
 	body := helper.GetJSONBody(ctx)
@@ -56,40 +67,60 @@ func Update(ctx *gin.Context) {
 	Password := helper.GetJSONString(body, "Password")
 	SSHKey := helper.GetJSONString(body, "SSHKey")
 
+	needUpdate := false
+
 	obj := models.Mirror{}
 	Alias := helper.GetJSONString(body, "Alias")
 	Url := helper.GetJSONString(body, "Url")
 	AuthType := helper.GetJSONString(body, "AuthType")
-	if entity.Alias != Alias {
+	if oldObj.Alias != Alias {
 		obj.Alias = Alias
 	}
-	if entity.Url != Url {
+	if oldObj.Url != Url {
+		// remote 的 URL 有变化需要更新仓库配置
+		needUpdate = true
 		obj.Url = Url
+		oldObj.Url = Url
 	}
-	if entity.AuthType != AuthType {
+	if oldObj.AuthType != AuthType {
 		obj.AuthType = AuthType
 	}
-	if *entity.Username != Username {
+	if *oldObj.Username != Username {
 		obj.Username = &Username
 	}
-	if *entity.Password != Password {
+	if *oldObj.Password != Password {
 		obj.Password = &Password
 	}
-	if *entity.SSHKey != SSHKey {
+	if *oldObj.SSHKey != SSHKey {
 		obj.SSHKey = &SSHKey
 	}
-
-	results = di.Container.DB.Model(&entity).Updates(obj)
+	results = di.Container.DB.Model(&oldObj).Updates(obj)
 	utils.ThrowIfError(results.Error)
 
-	// 更新仓库的 remote
+
+	if needUpdate {
+		// 更新仓库的 remote
+		di.Container.RepositoryService.CreateRemote(entity, oldObj)
+	}
 
 	schemas.MakeResponse(ctx, obj, nil)
 }
 func Delete(ctx *gin.Context) {
-	// 使用 Unscoped 彻底删除
-	results := di.Container.DB.Unscoped().Delete(&models.Mirror{}, ctx.Param("mirrorId"))
+	entity := models.Repository{}
+	results := di.Container.DB.First(&entity, ctx.Param("repositoryId"))
 	utils.ThrowIfError(results.Error)
+
+	obj := models.Mirror{}
+	results = di.Container.DB.First(&obj, ctx.Param("mirrorId"))
+	utils.ThrowIfError(results.Error)
+
+	// 使用 Unscoped 彻底删除
+	results = di.Container.DB.Unscoped().Delete(&models.Mirror{}, ctx.Param("mirrorId"))
+	utils.ThrowIfError(results.Error)
+
+	// 在仓库创建 remote
+	di.Container.RepositoryService.DeleteRemote(entity, obj)
+
 	schemas.MakeResponse(ctx, "ok", nil)
 }
 func Push(ctx *gin.Context) {
@@ -97,6 +128,16 @@ func Push(ctx *gin.Context) {
 	results := di.Container.DB.Preload("Repository").First(&entity, ctx.Param("mirrorId"))
 	utils.ThrowIfError(results.Error)
 
-	fmt.Println(entity)
-	schemas.MakeResponse(ctx, entity, nil)
+	go func ()  {
+		err := di.Container.RepositoryService.SyncMirror(entity.Repository, entity)
+		var data = make(map[string]interface{})
+		if err != nil {
+			data["LastError"] = err.Error()
+		} else {
+			data["PushedAt"] = time.Now()
+			data["LastError"] = nil
+		}
+		di.Container.DB.Model(&entity).Updates(data)
+	}()
+	schemas.MakeResponse(ctx, "ok", nil)
 }

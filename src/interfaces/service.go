@@ -14,7 +14,7 @@ type IRepositoryService interface {
 	MakeGitAuth(r models.Repository) (transport.AuthMethod, error) 
 	Clone(r models.Repository) error
 	SyncOrigin(r models.Repository) error
-	SyncMirror(r models.Repository) error
+	SyncMirror(r models.Repository, m models.Mirror) error
 	CreateRemote(r models.Repository, m models.Mirror) error
 	DeleteRemote(r models.Repository, m models.Mirror) error
 	BuildBranchInfo(r models.Repository) error

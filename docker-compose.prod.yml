@@ -1,0 +1,19 @@
+version: '2.4'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - 80
+    environment:
+      - GOPROXY=https://goproxy.cn,direct
+      - GO111MODULE=auto
+      - DATABASE_TYPE=sqlite
+      - DATABASE_DSN=/app/data/production.db
+    volumes:
+      - ./tmp/data:/app/data
+    working_dir: /app
+    tty: true
+    stdin_open: true

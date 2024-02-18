@@ -5,6 +5,7 @@ import (
 	"app/di"
 	"app/models"
 	"app/utils"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -335,7 +336,7 @@ func (s *RepositoryService) BuildBranchInfo(r models.Repository) error {
 /*
 同步上传镜像仓库的记录
 */
-func (s *RepositoryService) SyncMirror(r models.Repository) error {
+func (s *RepositoryService) SyncMirror(r models.Repository, m models.Mirror) error {
 	if r.Name == "" {
 		return fmt.Errorf("repository name is blank")
 	}
@@ -344,12 +345,33 @@ func (s *RepositoryService) SyncMirror(r models.Repository) error {
 	if err != nil {
 		return err
 	}
-	// s.CreateRemote(r)
-
-	// TODO
-	err = repo.Push(&git.PushOptions{
-
+	remote, err := repo.Remote(m.Name)
+	if err != nil {
+		return err
+	}
+	cfg := remote.Config()
+	auth, err := s.MakeGitAuth(models.Repository{
+		AuthType: m.AuthType,
+		Username: m.Username,
+		Password: m.Password,
+		SSHKey: m.SSHKey,
 	})
+	if err != nil {
+		return err
+	}
+
+	// 强制推送所有的分支、tag
+	err = repo.Push(&git.PushOptions{
+		RemoteName: cfg.Name,
+		RemoteURL: cfg.URLs[0],
+		Auth: auth,
+		Force: true,
+		RefSpecs: []gitconfig.RefSpec{gitconfig.RefSpec("refs/tags/*:refs/tags/*"), gitconfig.RefSpec("refs/heads/*:refs/heads/*")},
+	})
+	if err != nil && errors.Is(err, git.NoErrAlreadyUpToDate) {
+		// 忽略 already up-to-date 的错误
+		err = nil
+	}
 	return err
 }
 func (s *RepositoryService) CreateRemote(r models.Repository, m models.Mirror) error {
@@ -369,6 +391,8 @@ func (s *RepositoryService) CreateRemote(r models.Repository, m models.Mirror) e
 		if cfg.URLs[0] == m.Url {
 			return nil
 		}
+		// remote url不一致，先删除再重新创建
+		s.DeleteRemote(r, m)
 	}
 	_, err = repo.CreateRemote(&gitconfig.RemoteConfig{
 		Name: m.Name,
@@ -392,5 +416,6 @@ func (s *RepositoryService) DeleteRemote(r models.Repository, m models.Mirror) e
 		return nil
 	}
 
+	os.RemoveAll(path.Join(target, ".git/refs/remotes", m.Name))
 	return repo.DeleteRemote(m.Name)
 }
