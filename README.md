@@ -1,7 +1,7 @@
 # 多个 git 仓库自动同步
 ## 使用说明
 
-启动服务：`docker-compose up -d app`
+启动服务：`docker-compose -f docker-compose.prod.yml up -d app`
 
 先添加仓库地址：
 

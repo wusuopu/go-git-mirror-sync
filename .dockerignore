@@ -9,3 +9,6 @@ src/.env
 src/tmp/
 src/notes/
 src/app
+src/goose
+src/data/
+tmp/
