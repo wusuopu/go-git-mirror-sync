@@ -7,7 +7,7 @@ tmp_dir = "tmp"
   bin = "./tmp/main"
   cmd = "go build -tags=jsoniter -o ./tmp/main main.go"
   delay = 1000
-  exclude_dir = ["assets", "tmp", "vendor", "testdata", "data", "tests"]
+  exclude_dir = ["assets", "tmp", "vendor", "testdata", "data", "tests", "docs"]
   exclude_file = []
   exclude_regex = ["_test.go"]
   exclude_unchanged = false

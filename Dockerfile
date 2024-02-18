@@ -26,7 +26,8 @@ ENV GO_ENV=production \
     BASIC_AUTH_PASSWORD= \
     DATABASE_TYPE=sqlite \
     DATABASE_DSN=/app/data/production.db \
-    GIT_INSECURE_SKIP_TLS=false
+    GIT_INSECURE_SKIP_TLS=false \
+    CRONTAB="0 */6 * * *"
 
 ENTRYPOINT ["/app/run.sh"]
 

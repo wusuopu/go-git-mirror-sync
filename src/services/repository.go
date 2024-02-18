@@ -163,7 +163,7 @@ func (s *RepositoryService) cleanAllLocalBranches(repo *git.Repository, target s
 	}
 	return nil
 }
-// 获取远程仓库的所有分支名或Tag名
+// 获取仓库的所有分支名或Tag名
 func (s *RepositoryService) getAllBranchNames(target string, isTag bool, isRemote bool) (*map[string]string, error) {
 	// {<name>: <hash>}
 	var all_branches = make(map[string]string)
@@ -211,6 +211,90 @@ func (s *RepositoryService) createBranchesFromRemote(repo *git.Repository, targe
 		}
 		os.WriteFile(filename, []byte(hash + "\n"), os.ModePerm)
 	}
+	return nil
+}
+// 列出远程仓库的所有 tag、分支信息
+func (s *RepositoryService) listRemoteAllRefs(repo *git.Repository, remoteName string, auth transport.AuthMethod) (*[]map[string]string, error) {
+	var results []map[string]string
+	remote, err := repo.Remote(remoteName)
+	if err != nil {
+		return &results, err
+	}
+	refs, err := remote.List(&git.ListOptions{
+		Auth: auth,
+	})
+	if err != nil {
+		return &results, err
+	}
+	for _, ref := range refs {
+		item := make(map[string]string)
+		item["ref"] = ref.Name().String()
+		if ref.Name().IsTag() {
+			item["tag"] = "true"
+			item["name"] = strings.TrimPrefix(item["ref"], "refs/tags/")
+		} else {
+			item["tag"] = ""
+			item["name"] = strings.TrimPrefix(item["ref"], "refs/heads/")
+		}
+		results = append(results, item)
+	}
+
+	return &results, nil
+}
+// 删除远程仓库中所有在本地不存在的分支及 tag
+func (s *RepositoryService) pruneRemoteRefs(repo *git.Repository, remoteName string, auth transport.AuthMethod, target string) error {
+	allBranches, err := s.getAllBranchNames(target, false, true)
+	if err != nil {
+		return err
+	}
+	allTags, err := s.getAllBranchNames(target, true, false)
+	if err != nil {
+		return err
+	}
+	allRemoteRefs, err := s.listRemoteAllRefs(repo, remoteName, auth) 
+	if err != nil {
+		return err
+	}
+	remote, err := repo.Remote(remoteName)
+	if err != nil {
+		return err
+	}
+	cfg := remote.Config()
+
+
+	di.Container.Logger.Info(fmt.Sprintf("Start to Prune %s", cfg.URLs[0]))
+
+	var willRemoveSpecs []gitconfig.RefSpec
+	for _, item := range *allRemoteRefs {
+		if item["tag"] == "" {
+			if (*allBranches)[item["name"]] == "" {
+				// 该分支在本地不存在
+				di.Container.Logger.Debug(fmt.Sprintf("Remove remote %s branch %s", remoteName, item["name"]))
+				willRemoveSpecs = append(willRemoveSpecs, gitconfig.RefSpec(":" + item["ref"]))
+			}
+		} else {
+			if (*allTags)[item["name"]] == "" {
+				// 该 tag 在本地不存在
+				di.Container.Logger.Debug(fmt.Sprintf("Remove remote %s tag %s", remoteName, item["name"]))
+				willRemoveSpecs = append(willRemoveSpecs, gitconfig.RefSpec(":" + item["ref"]))
+			}
+		}
+	}
+
+	if len(willRemoveSpecs) > 0 {
+		err = repo.Push(&git.PushOptions{
+			RemoteName: cfg.Name,
+			RemoteURL: cfg.URLs[0],
+			Auth: auth,
+			Force: true,
+			RefSpecs: willRemoveSpecs,
+		})
+		if err != nil && errors.Is(err, git.NoErrAlreadyUpToDate) {
+			// 忽略 already up-to-date 的错误
+			err = nil
+		}
+	}
+
 	return nil
 }
 /*
@@ -357,9 +441,11 @@ func (s *RepositoryService) SyncMirror(r models.Repository, m models.Mirror) err
 		SSHKey: m.SSHKey,
 	})
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 
+	di.Container.Logger.Info(fmt.Sprintf("Start to Push %s", cfg.URLs[0]))
 	// 强制推送所有的分支、tag
 	err = repo.Push(&git.PushOptions{
 		RemoteName: cfg.Name,
@@ -372,6 +458,13 @@ func (s *RepositoryService) SyncMirror(r models.Repository, m models.Mirror) err
 		// 忽略 already up-to-date 的错误
 		err = nil
 	}
+	if err != nil {
+		di.Container.Logger.Error(fmt.Sprintf("Push Error %s %s", cfg.URLs[0], err.Error()))
+		return err
+	}
+	di.Container.Logger.Info(fmt.Sprintf("Finish Push %s", cfg.URLs[0]))
+
+	err = s.pruneRemoteRefs(repo, m.Name, auth, target)
 	return err
 }
 func (s *RepositoryService) CreateRemote(r models.Repository, m models.Mirror) error {

@@ -6,6 +6,7 @@ import (
 	"app/schemas"
 	"app/utils"
 	"app/utils/helper"
+	"fmt"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -25,7 +26,7 @@ func Create(ctx *gin.Context) {
 
 	body := helper.GetJSONBody(ctx)
 	Name := helper.GetJSONString(body, "Name")
-	if di.Container.DB.Where("name = ?", Name).First(&models.Mirror{}).RowsAffected > 0 {
+	if di.Container.DB.Where("name = ?", Name).Where("repository_id = ?", ctx.Param("repositoryId")).First(&models.Mirror{}).RowsAffected > 0 {
 		schemas.MakeErrorResponse(ctx, "Name重复", 400)
 		return
 	}
@@ -49,7 +50,10 @@ func Create(ctx *gin.Context) {
 	utils.ThrowIfError(results.Error)
 
 	// 在仓库创建 remote
-	di.Container.RepositoryService.CreateRemote(entity, obj)
+	err := di.Container.RepositoryService.CreateRemote(entity, obj)
+	if err != nil {
+		di.Container.Logger.Error(fmt.Sprintf("Create remote mirror error: %s %s %s", entity.Name, obj.Name, err.Error()))
+	}
 
 	schemas.MakeResponse(ctx, obj, nil)
 }
@@ -100,7 +104,10 @@ func Update(ctx *gin.Context) {
 
 	if needUpdate {
 		// 更新仓库的 remote
-		di.Container.RepositoryService.CreateRemote(entity, oldObj)
+		err := di.Container.RepositoryService.CreateRemote(entity, oldObj)
+		if err != nil {
+			di.Container.Logger.Error(fmt.Sprintf("Create remote mirror error: %s %s %s", entity.Name, obj.Name, err.Error()))
+		}
 	}
 
 	schemas.MakeResponse(ctx, obj, nil)

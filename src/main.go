@@ -2,6 +2,7 @@ package main
 
 import (
 	"app/config"
+	"app/di"
 	"app/initialize"
 	"context"
 	"log"
@@ -17,6 +18,20 @@ import (
 func main() {
 	e := gin.New()
 	initialize.Init(e)
+
+	defer func ()  {
+		if di.Container.Scheduler != nil {
+			// 退出定时任务
+			(*di.Container.Scheduler).Shutdown()
+		}	
+	}()
+	go func ()  {
+		if di.Container.Scheduler != nil {
+			// 开始定时任务
+			di.Container.Logger.Info("start CronJob")
+			(*di.Container.Scheduler).Start()
+		}	
+	}()
 
 	if gin.Mode() == gin.ReleaseMode {
 		// 生产模块下实现 gracefully shutdown

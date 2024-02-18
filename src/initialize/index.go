@@ -26,6 +26,7 @@ func Init(e *gin.Engine) *gin.Engine {
 	InitEnv()
 	config.Load()
 
+	InitJobs()
 	return commonInit(e)
 }
 
