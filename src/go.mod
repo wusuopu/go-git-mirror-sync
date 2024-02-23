@@ -7,6 +7,7 @@ require (
 	github.com/glebarez/sqlite v1.10.0
 	github.com/go-co-op/gocron/v2 v2.2.4
 	github.com/go-git/go-git/v5 v5.11.0
+	github.com/go-playground/validator/v10 v10.14.0
 	github.com/itchyny/timefmt-go v0.1.5
 	github.com/joho/godotenv v1.5.1
 	github.com/pressly/goose/v3 v3.18.0
@@ -36,7 +37,6 @@ require (
 	github.com/go-git/go-billy/v5 v5.5.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
-	github.com/go-playground/validator/v10 v10.14.0 // indirect
 	github.com/go-sql-driver/mysql v1.7.1 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect

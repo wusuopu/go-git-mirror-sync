@@ -8,6 +8,8 @@ import (
 
 func commonInit(e *gin.Engine) *gin.Engine {
 	InitServices()
+	InitSerializers()
+	InitValidators()
 
 	var engine *gin.Engine
 	if e == nil {

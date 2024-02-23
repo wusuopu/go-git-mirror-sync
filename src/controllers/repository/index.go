@@ -6,7 +6,6 @@ import (
 	"app/schemas"
 	"app/utils"
 	"app/utils/helper"
-	"fmt"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -19,29 +18,26 @@ func Index(ctx *gin.Context) {
 	pagination.Build(di.Container.DB, ctx).Find(&data)
 	utils.ThrowIfError(di.Container.DB.Error)
 
-	schemas.MakeResponse(ctx, data, &pagination)
+	schemas.MakeResponse(ctx, di.Container.RepositorySerializer.List(data), &pagination)
 }
 func Create(ctx *gin.Context) {
 	body := helper.GetJSONBody(ctx)
-	Username := helper.GetJSONString(body, "Username")
-	Password := helper.GetJSONString(body, "Password")
-	SSHKey := helper.GetJSONString(body, "SSHKey")
+	// Username := helper.GetJSONString(body, "Username")
+	// Password := helper.GetJSONString(body, "Password")
+	// SSHKey := helper.GetJSONString(body, "SSHKey")
 
-	fmt.Println("create with", helper.GetJSONString(body, "Name"))
-	Name := helper.GetJSONString(body, "Name")
-	if di.Container.DB.Where("name = ?", Name).First(&models.Repository{}).RowsAffected > 0 {
-		schemas.MakeErrorResponse(ctx, "Name重复", 400)
+	// fmt.Println("create with", helper.GetJSONString(body, "Name"))
+	// Name := helper.GetJSONString(body, "Name")
+	// if di.Container.DB.Where("name = ?", Name).First(&models.Repository{}).RowsAffected > 0 {
+	// 	schemas.MakeErrorResponse(ctx, "Name重复", 400)
+	// 	return
+	// }
+	obj, err := di.Container.RepositoryValidator.ValidateCreate(body)
+	if err != nil {
+		schemas.MakeErrorResponse(ctx, err, 400)
 		return
 	}
-	obj := models.Repository{
-		Name: Name,
-		Alias: helper.GetJSONString(body, "Alias"),
-		Url: helper.GetJSONString(body, "Url"),
-		AuthType: helper.GetJSONString(body, "AuthType"),
-		Username: &Username,
-		Password: &Password,
-		SSHKey: &SSHKey,
-	}
+	
 	di.Container.DB.Create(&obj)
 	if di.Container.DB.Error != nil {
 		schemas.MakeErrorResponse(ctx, di.Container.DB.Error, 500)
@@ -55,7 +51,7 @@ func Show(ctx *gin.Context) {
 	results := di.Container.DB.First(&entity, ctx.Param("repositoryId"))
 	utils.ThrowIfError(results.Error)
 
-	schemas.MakeResponse(ctx, entity, nil)
+	schemas.MakeResponse(ctx, di.Container.RepositorySerializer.Show(entity), nil)
 }
 
 func Delete(ctx *gin.Context) {
